@@ -3,6 +3,14 @@
 
 This is a fork of the linkhandler TYPO3 extension.
 
+## TYPO3 7 compatibility
+
+A TYPO3 7 compatible version of this Extension can be found here:
+
+https://github.com/cobwebch/linkhandler/
+
+Please add all TYPO3 7 related issues / pull requests there.
+
 ## About this fork
 
 This is an experimental version of the linkhandler extension that aims
