@@ -68,6 +68,14 @@ class ElementBrowserHook implements ElementBrowserHookInterface {
 	protected $tabsConfig;
 
 	/**
+	 * Array to store the allowed items temporary
+	 * for use across multiple hook methods which are called by ElementBrowser
+	 *
+	 * @var array
+	 */
+	protected $allowedItems = array();
+
+	/**
 	 * Initializes global objects
 	 */
 	public function __construct() {
@@ -89,7 +97,18 @@ class ElementBrowserHook implements ElementBrowserHookInterface {
 			$allowedItems[] = $name;
 		}
 
-		return $allowedItems;
+		// Initializing the action value, possibly removing blinded values again,
+		// because one of the new allowed items could be in blindLinkOptions array
+		$blindLinkOptions = isset($this->pObj->thisConfig['blindLinkOptions'])
+			? GeneralUtility::trimExplode(',', $this->pObj->thisConfig['blindLinkOptions'], TRUE)
+			: array();
+		$pBlindLinkOptions = isset($this->pObj->P['params']['blindLinkOptions'])
+			? GeneralUtility::trimExplode(',', $this->pObj->P['params']['blindLinkOptions'])
+			: array();
+
+		$this->allowedItems = array_diff($allowedItems, $blindLinkOptions, $pBlindLinkOptions);
+
+		return $this->allowedItems;
 	}
 
 	/**
@@ -192,14 +211,14 @@ class ElementBrowserHook implements ElementBrowserHookInterface {
 	public function modifyMenuDefinition($menuDef) {
 
 		$tabs = $this->configurationManager->getTabsConfiguration();
-
 		foreach ($tabs as $key => $tabConfig) {
-			$menuDef[$key]['isActive'] = $this->pObj->act == $key;
-			$menuDef[$key]['label'] = $this->languageService->sL($tabConfig['label'], TRUE);
-			$menuDef[$key]['url'] = '#';
-			$menuDef[$key]['addParams'] = 'onclick="jumpToUrl(' . GeneralUtility::quoteJSvalue($this->getThisScript() . 'act=' . $key) . ');return false;"';
+			if (in_array($key, $this->allowedItems)) {
+				$menuDef[$key]['isActive'] = $this->pObj->act == $key;
+				$menuDef[$key]['label'] = $this->languageService->sL($tabConfig['label'], TRUE);
+				$menuDef[$key]['url'] = '#';
+				$menuDef[$key]['addParams'] = 'onclick="jumpToUrl(' . GeneralUtility::quoteJSvalue($this->getThisScript() . 'act=' . $key) . ');return false;"';
+			}
 		}
-
 		return $menuDef;
 	}
 
